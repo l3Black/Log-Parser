@@ -3,6 +3,7 @@ package com.javarush.task.task39.task3913;
 import com.javarush.task.task39.task3913.query.*;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -387,6 +388,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     //Methods for QLQuery
     @Override
     public Set<Object> execute(String query) {
+        Set<Object> result = new HashSet<>();
         switch (query.toLowerCase()){
             case "get ip":
                 return new HashSet<>(getUniqueIPs(null, null));
@@ -407,10 +409,67 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
                 }
                 return resultStatus;
         }
-        return new HashSet<>();
+        String value = query.split("=")[1].replaceAll("\"", "").trim();
+        String field1 = query.split("\\s")[1].trim();
+        String field2 = query.split("\\s")[3].trim();
+        switch (field2.toLowerCase()){
+            case "ip":
+                for (String s : getLogsFromPath()){
+                    if (getIpFromLog(s).trim().equals(value))
+                        result.add(getField(s, field1));
+                }
+                return result;
+            case "user" :
+                for (String s : getLogsFromPath()){
+                    if (getUserNameFromLog(s).trim().equals(value))
+                        result.add(getField(s, field1));
+                }
+                return result;
+            case "date" :
+                try {
+                    Date date = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse(value);
+                    for (String s : getLogsFromPath()){
+                        if (getDateFromLog(s).equals(date))
+                            result.add(getField(s, field1));
+                    }
+                    return result;
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            case "event" :
+                for (String s : getLogsFromPath()){
+                    if (getEventFromLog(s) == Event.valueOf(value))
+                        result.add(getField(s, field1));
+                }
+                return result;
+            case "status" :
+                for (String s : getLogsFromPath()){
+                    if (getStatusFromLog(s) == Status.valueOf(value))
+                        result.add(getField(s, field1));
+                }
+                return result;
+        }
+        return result;
     }
 
     //Methods for help
+    private Object getField(String log, String field){
+        switch (field.toLowerCase()){
+            case "ip" :
+                return getIpFromLog(log);
+            case "user" :
+                return getUserNameFromLog(log);
+            case "date" :
+                return getDateFromLog(log);
+            case "event" :
+                return getEventFromLog(log);
+            case "status" :
+                return getStatusFromLog(log);
+                default:
+                    return null;
+        }
+    }
+
     private String getIpFromLog(String log){
         String[] strings = log.split("\\s", 2);
         return strings[0];
