@@ -1,5 +1,6 @@
 package com.javarush.task.task39.task3913;
 
+import com.javarush.task.task39.task3913.query.DateQuery;
 import com.javarush.task.task39.task3913.query.IPQuery;
 import com.javarush.task.task39.task3913.query.UserQuery;
 
@@ -12,13 +13,14 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class LogParser implements IPQuery, UserQuery {
+public class LogParser implements IPQuery, UserQuery, DateQuery {
     private Path logDir;
 
     public LogParser(Path logDir) {
         this.logDir = logDir;
     }
 
+    //Methods from IPQuery
     @Override
     public int getNumberOfUniqueIPs(Date after, Date before) {
         return getUniqueIPs(after, before).size();
@@ -50,7 +52,7 @@ public class LogParser implements IPQuery, UserQuery {
         List<String> list = getLogsBetweenDate(after, before);
         Set<String> result = new HashSet<>();
         for (String s : list){
-            if (getEventFromLog(s).equals(event.toString()))
+            if (getEventFromLog(s) == event)
                 result.add(getIpFromLog(s));
         }
         return result;
@@ -61,12 +63,13 @@ public class LogParser implements IPQuery, UserQuery {
         List<String> list = getLogsBetweenDate(after, before);
         Set<String> result = new HashSet<>();
         for (String s : list){
-            if (getStatusFromLog(s).equals(status.toString()))
+            if (getStatusFromLog(s) == status)
                 result.add(getIpFromLog(s));
         }
         return result;
     }
 
+    //Methods from UserQuery
     @Override
     public Set<String> getAllUsers() {
         Set<String> result = new HashSet<>();
@@ -87,7 +90,7 @@ public class LogParser implements IPQuery, UserQuery {
 
     @Override
     public int getNumberOfUserEvents(String user, Date after, Date before) {
-        Set<String> result = new HashSet<>();
+        Set<Event> result = new HashSet<>();
         for (String s : getLogsBetweenDate(after, before)){
             if (user.equals(getUserNameFromLog(s))){
                 result.add(getEventFromLog(s));
@@ -111,7 +114,7 @@ public class LogParser implements IPQuery, UserQuery {
     public Set<String> getLoggedUsers(Date after, Date before) {
         Set<String> result = new HashSet<>();
         for (String s : getLogsBetweenDate(after, before)){
-            if (Event.LOGIN.toString().equals(getEventFromLog(s)))
+            if (Event.LOGIN == getEventFromLog(s))
                 result.add(getUserNameFromLog(s));
         }
         return result;
@@ -121,7 +124,7 @@ public class LogParser implements IPQuery, UserQuery {
     public Set<String> getDownloadedPluginUsers(Date after, Date before) {
         Set<String> result = new HashSet<>();
         for (String s : getLogsBetweenDate(after, before)){
-            if (Event.DOWNLOAD_PLUGIN.toString().equals(getEventFromLog(s))){
+            if (Event.DOWNLOAD_PLUGIN == getEventFromLog(s)){
                 result.add(getUserNameFromLog(s));
             }
         }
@@ -132,7 +135,7 @@ public class LogParser implements IPQuery, UserQuery {
     public Set<String> getWroteMessageUsers(Date after, Date before) {
         Set<String> result = new HashSet<>();
         for (String s : getLogsBetweenDate(after, before)){
-            if (Event.WRITE_MESSAGE.toString().equals(getEventFromLog(s))){
+            if (Event.WRITE_MESSAGE == getEventFromLog(s)){
                 result.add(getUserNameFromLog(s));
             }
         }
@@ -143,7 +146,7 @@ public class LogParser implements IPQuery, UserQuery {
     public Set<String> getSolvedTaskUsers(Date after, Date before) {
         Set<String> result = new HashSet<>();
         for (String s : getLogsBetweenDate(after, before)){
-            if (Event.SOLVE_TASK.toString().equals(getEventFromLog(s))){
+            if (Event.SOLVE_TASK == getEventFromLog(s)){
                 result.add(getUserNameFromLog(s));
             }
         }
@@ -154,12 +157,8 @@ public class LogParser implements IPQuery, UserQuery {
     public Set<String> getSolvedTaskUsers(Date after, Date before, int task) {
         Set<String> result = new HashSet<>();
         for (String s : getLogsBetweenDate(after, before)){
-            Pattern p = Pattern.compile("SOLVE_TASK\\s\\d+");
-            Matcher m = p.matcher(s);
-            if (m.find()){
-                if (task == Integer.parseInt(m.group().split("\\s")[1])){
-                    result.add(getUserNameFromLog(s));
-                }
+            if (getEventFromLog(s) == Event.SOLVE_TASK && task == getTaskFromLog(s)){
+                result.add(getUserNameFromLog(s));
             }
         }
         return result;
@@ -169,7 +168,7 @@ public class LogParser implements IPQuery, UserQuery {
     public Set<String> getDoneTaskUsers(Date after, Date before) {
         Set<String> result = new HashSet<>();
         for (String s : getLogsBetweenDate(after, before)){
-            if (Event.DONE_TASK.toString().equals(getEventFromLog(s))){
+            if (Event.DONE_TASK == getEventFromLog(s)){
                 result.add(getUserNameFromLog(s));
             }
         }
@@ -180,13 +179,108 @@ public class LogParser implements IPQuery, UserQuery {
     public Set<String> getDoneTaskUsers(Date after, Date before, int task) {
         Set<String> result = new HashSet<>();
         for (String s : getLogsBetweenDate(after, before)){
-            Pattern p = Pattern.compile("DONE_TASK\\s\\d+");
-            Matcher m = p.matcher(s);
-            if (m.find()){
-                if (task == Integer.parseInt(m.group().split("\\s")[1])){
-                    result.add(getUserNameFromLog(s));
+            if (getEventFromLog(s) == Event.DONE_TASK && task == getTaskFromLog(s)){
+                result.add(getUserNameFromLog(s));
+            }
+        }
+        return result;
+    }
+
+    //Methods from DateQuery
+    @Override
+    public Set<Date> getDatesForUserAndEvent(String user, Event event, Date after, Date before) {
+        Set<Date> result = new HashSet<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            if (user.equals(getUserNameFromLog(s)) && event == getEventFromLog(s)){
+                result.add(getDateFromLog(s));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Date> getDatesWhenSomethingFailed(Date after, Date before) {
+        Set<Date> result = new HashSet<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            if (Status.FAILED == getStatusFromLog(s)){
+                result.add(getDateFromLog(s));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Date> getDatesWhenErrorHappened(Date after, Date before) {
+        Set<Date> result = new HashSet<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            if (Status.ERROR == getStatusFromLog(s)){
+                result.add(getDateFromLog(s));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Date getDateWhenUserLoggedFirstTime(String user, Date after, Date before) {
+        Date result = null;
+        for (String s : getLogsBetweenDate(after, before)){
+            if (user.equals(getUserNameFromLog(s)) && Event.LOGIN == getEventFromLog(s)){
+                Date date = getDateFromLog(s);
+                if (result == null || result.getTime() > date.getTime())
+                    result = date;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Date getDateWhenUserSolvedTask(String user, int task, Date after, Date before) {
+        Date result = null;
+        for (String s : getLogsBetweenDate(after, before)){
+            if (user.equals(getUserNameFromLog(s))
+                    && Event.SOLVE_TASK == getEventFromLog(s)
+                    && task == getTaskFromLog(s)){
+                Date date = getDateFromLog(s);
+                if (result == null || result.getTime() > date.getTime()){
+                    result = date;
                 }
             }
+        }
+        return result;
+    }
+
+    @Override
+    public Date getDateWhenUserDoneTask(String user, int task, Date after, Date before) {
+        Date result = null;
+        for (String s : getLogsBetweenDate(after, before)){
+            if (user.equals(getUserNameFromLog(s))
+                    && Event.DONE_TASK == getEventFromLog(s)
+                    && task == getTaskFromLog(s)){
+                Date date = getDateFromLog(s);
+                if (result == null || result.getTime() > date.getTime()){
+                    result = date;
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Date> getDatesWhenUserWroteMessage(String user, Date after, Date before) {
+        Set<Date> result = new HashSet<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            if (Event.WRITE_MESSAGE == getEventFromLog(s) && user.equals(getUserNameFromLog(s)))
+                result.add(getDateFromLog(s));
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Date> getDatesWhenUserDownloadedPlugin(String user, Date after, Date before) {
+        Set<Date> result = new HashSet<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            if (Event.DOWNLOAD_PLUGIN == getEventFromLog(s) && user.equals(getUserNameFromLog(s)))
+                result.add(getDateFromLog(s));
         }
         return result;
     }
@@ -217,21 +311,21 @@ public class LogParser implements IPQuery, UserQuery {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        return null;
+        return date;
     }
 
-    private String getEventFromLog(String log){
+    private Event getEventFromLog(String log){
         Pattern p = Pattern.compile("LOGIN|DOWNLOAD_PLUGIN|WRITE_MESSAGE|SOLVE_TASK|DONE_TASK");
         Matcher m = p.matcher(log);
         m.find();
-        return m.group();
+        return Event.valueOf(m.group());
     }
 
-    private String getStatusFromLog(String log){
+    private Status getStatusFromLog(String log){
         Pattern p = Pattern.compile("OK|FAILED|ERROR");
         Matcher m = p.matcher(log);
         m.find();
-        return m.group();
+        return Status.valueOf(m.group());
     }
 
     private List<String> getLogsFromPath(){
@@ -259,5 +353,11 @@ public class LogParser implements IPQuery, UserQuery {
         return result;
     }
 
+    private int getTaskFromLog(String log){
+        Pattern p = Pattern.compile("DONE_TASK\\s\\d+|SOLVE_TASK\\s\\d+");
+        Matcher m = p.matcher(log);
+        m.find();
+        return Integer.parseInt(m.group().split("\\s")[1]);
+    }
 
 }
