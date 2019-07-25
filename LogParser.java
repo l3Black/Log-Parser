@@ -1,6 +1,7 @@
 package com.javarush.task.task39.task3913;
 
 import com.javarush.task.task39.task3913.query.DateQuery;
+import com.javarush.task.task39.task3913.query.EventQuery;
 import com.javarush.task.task39.task3913.query.IPQuery;
 import com.javarush.task.task39.task3913.query.UserQuery;
 
@@ -13,7 +14,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class LogParser implements IPQuery, UserQuery, DateQuery {
+public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery {
     private Path logDir;
 
     public LogParser(Path logDir) {
@@ -285,6 +286,107 @@ public class LogParser implements IPQuery, UserQuery, DateQuery {
         return result;
     }
 
+    //Methods for EventQuery
+    @Override
+    public int getNumberOfAllEvents(Date after, Date before) {
+        return getAllEvents(after, before).size();
+    }
+
+    @Override
+    public Set<Event> getAllEvents(Date after, Date before) {
+        Set<Event> result = new HashSet<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            result.add(getEventFromLog(s));
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Event> getEventsForIP(String ip, Date after, Date before) {
+        Set<Event> result = new HashSet<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            if (ip.equals(getIpFromLog(s)))
+                result.add(getEventFromLog(s));
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Event> getEventsForUser(String user, Date after, Date before) {
+        Set<Event> result = new HashSet<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            if (user.equals(getUserNameFromLog(s)))
+                result.add(getEventFromLog(s));
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Event> getFailedEvents(Date after, Date before) {
+        Set<Event> result = new HashSet<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            if (Status.FAILED == getStatusFromLog(s))
+                result.add(getEventFromLog(s));
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Event> getErrorEvents(Date after, Date before) {
+        Set<Event> result = new HashSet<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            if (Status.ERROR == getStatusFromLog(s))
+                result.add(getEventFromLog(s));
+        }
+        return result;
+    }
+
+    @Override
+    public int getNumberOfAttemptToSolveTask(int task, Date after, Date before) {
+        int count = 0;
+        for (String s : getLogsBetweenDate(after, before)){
+            if (Event.SOLVE_TASK == getEventFromLog(s) && task == getTaskFromLog(s)){
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public int getNumberOfSuccessfulAttemptToSolveTask(int task, Date after, Date before) {
+        int count = 0;
+        for (String s : getLogsBetweenDate(after, before)){
+            if (Event.DONE_TASK == getEventFromLog(s) && task == getTaskFromLog(s)){
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public Map<Integer, Integer> getAllSolvedTasksAndTheirNumber(Date after, Date before) {
+        Map<Integer, Integer> result = new HashMap<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            if (Event.SOLVE_TASK == getEventFromLog(s)){
+                int task = getTaskFromLog(s);
+                result.put(task, getNumberOfAttemptToSolveTask(task, after, before));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Map<Integer, Integer> getAllDoneTasksAndTheirNumber(Date after, Date before) {
+        Map<Integer, Integer> result = new HashMap<>();
+        for (String s : getLogsBetweenDate(after, before)){
+            if (Event.DONE_TASK == getEventFromLog(s)){
+                int task = getTaskFromLog(s);
+                result.put(task, getNumberOfSuccessfulAttemptToSolveTask(task, after, before));
+            }
+        }
+        return result;
+    }
+
     //Methods for help
     private String getIpFromLog(String log){
         String[] strings = log.split("\\s", 2);
@@ -359,5 +461,6 @@ public class LogParser implements IPQuery, UserQuery, DateQuery {
         m.find();
         return Integer.parseInt(m.group().split("\\s")[1]);
     }
+
 
 }
