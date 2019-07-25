@@ -3,7 +3,6 @@ package com.javarush.task.task39.task3913;
 import com.javarush.task.task39.task3913.query.*;
 
 import java.io.*;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -27,7 +26,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
 
     @Override
     public Set<String> getUniqueIPs(Date after, Date before) {
-        List<String> list = getLogsBetweenDate(after, before);
+        List<String> list = getLogsBetweenDate(after, before, true);
         Set<String> result = new HashSet<>();
         for (String s : list){
             result.add(getIpFromLog(s));
@@ -37,7 +36,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
 
     @Override
     public Set<String> getIPsForUser(String user, Date after, Date before) {
-        List<String> list = getLogsBetweenDate(after, before);
+        List<String> list = getLogsBetweenDate(after, before, true);
         Set<String> result = new HashSet<>();
         for (String s : list){
             if (getUserNameFromLog(s).equals(user))
@@ -48,7 +47,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
 
     @Override
     public Set<String> getIPsForEvent(Event event, Date after, Date before) {
-        List<String> list = getLogsBetweenDate(after, before);
+        List<String> list = getLogsBetweenDate(after, before, true);
         Set<String> result = new HashSet<>();
         for (String s : list){
             if (getEventFromLog(s) == event)
@@ -59,7 +58,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
 
     @Override
     public Set<String> getIPsForStatus(Status status, Date after, Date before) {
-        List<String> list = getLogsBetweenDate(after, before);
+        List<String> list = getLogsBetweenDate(after, before, true);
         Set<String> result = new HashSet<>();
         for (String s : list){
             if (getStatusFromLog(s) == status)
@@ -81,7 +80,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public int getNumberOfUsers(Date after, Date before) {
         Set<String> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             result.add(getUserNameFromLog(s));
         }
         return result.size();
@@ -90,7 +89,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public int getNumberOfUserEvents(String user, Date after, Date before) {
         Set<Event> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (user.equals(getUserNameFromLog(s))){
                 result.add(getEventFromLog(s));
             }
@@ -101,7 +100,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<String> getUsersForIP(String ip, Date after, Date before) {
         Set<String> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (ip.equals(getIpFromLog(s))){
                 result.add(getUserNameFromLog(s));
             }
@@ -112,7 +111,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<String> getLoggedUsers(Date after, Date before) {
         Set<String> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Event.LOGIN == getEventFromLog(s))
                 result.add(getUserNameFromLog(s));
         }
@@ -122,7 +121,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<String> getDownloadedPluginUsers(Date after, Date before) {
         Set<String> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Event.DOWNLOAD_PLUGIN == getEventFromLog(s)){
                 result.add(getUserNameFromLog(s));
             }
@@ -133,7 +132,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<String> getWroteMessageUsers(Date after, Date before) {
         Set<String> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Event.WRITE_MESSAGE == getEventFromLog(s)){
                 result.add(getUserNameFromLog(s));
             }
@@ -144,7 +143,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<String> getSolvedTaskUsers(Date after, Date before) {
         Set<String> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Event.SOLVE_TASK == getEventFromLog(s)){
                 result.add(getUserNameFromLog(s));
             }
@@ -155,7 +154,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<String> getSolvedTaskUsers(Date after, Date before, int task) {
         Set<String> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (getEventFromLog(s) == Event.SOLVE_TASK && task == getTaskFromLog(s)){
                 result.add(getUserNameFromLog(s));
             }
@@ -166,7 +165,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<String> getDoneTaskUsers(Date after, Date before) {
         Set<String> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Event.DONE_TASK == getEventFromLog(s)){
                 result.add(getUserNameFromLog(s));
             }
@@ -177,7 +176,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<String> getDoneTaskUsers(Date after, Date before, int task) {
         Set<String> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (getEventFromLog(s) == Event.DONE_TASK && task == getTaskFromLog(s)){
                 result.add(getUserNameFromLog(s));
             }
@@ -189,7 +188,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<Date> getDatesForUserAndEvent(String user, Event event, Date after, Date before) {
         Set<Date> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (user.equals(getUserNameFromLog(s)) && event == getEventFromLog(s)){
                 result.add(getDateFromLog(s));
             }
@@ -200,7 +199,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<Date> getDatesWhenSomethingFailed(Date after, Date before) {
         Set<Date> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Status.FAILED == getStatusFromLog(s)){
                 result.add(getDateFromLog(s));
             }
@@ -211,7 +210,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<Date> getDatesWhenErrorHappened(Date after, Date before) {
         Set<Date> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Status.ERROR == getStatusFromLog(s)){
                 result.add(getDateFromLog(s));
             }
@@ -222,7 +221,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Date getDateWhenUserLoggedFirstTime(String user, Date after, Date before) {
         Date result = null;
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (user.equals(getUserNameFromLog(s)) && Event.LOGIN == getEventFromLog(s)){
                 Date date = getDateFromLog(s);
                 if (result == null || result.getTime() > date.getTime())
@@ -235,7 +234,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Date getDateWhenUserSolvedTask(String user, int task, Date after, Date before) {
         Date result = null;
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (user.equals(getUserNameFromLog(s))
                     && Event.SOLVE_TASK == getEventFromLog(s)
                     && task == getTaskFromLog(s)){
@@ -251,7 +250,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Date getDateWhenUserDoneTask(String user, int task, Date after, Date before) {
         Date result = null;
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (user.equals(getUserNameFromLog(s))
                     && Event.DONE_TASK == getEventFromLog(s)
                     && task == getTaskFromLog(s)){
@@ -267,7 +266,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<Date> getDatesWhenUserWroteMessage(String user, Date after, Date before) {
         Set<Date> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Event.WRITE_MESSAGE == getEventFromLog(s) && user.equals(getUserNameFromLog(s)))
                 result.add(getDateFromLog(s));
         }
@@ -277,7 +276,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<Date> getDatesWhenUserDownloadedPlugin(String user, Date after, Date before) {
         Set<Date> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Event.DOWNLOAD_PLUGIN == getEventFromLog(s) && user.equals(getUserNameFromLog(s)))
                 result.add(getDateFromLog(s));
         }
@@ -293,7 +292,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<Event> getAllEvents(Date after, Date before) {
         Set<Event> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before,true)){
             result.add(getEventFromLog(s));
         }
         return result;
@@ -302,7 +301,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<Event> getEventsForIP(String ip, Date after, Date before) {
         Set<Event> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (ip.equals(getIpFromLog(s)))
                 result.add(getEventFromLog(s));
         }
@@ -312,7 +311,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<Event> getEventsForUser(String user, Date after, Date before) {
         Set<Event> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (user.equals(getUserNameFromLog(s)))
                 result.add(getEventFromLog(s));
         }
@@ -322,7 +321,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<Event> getFailedEvents(Date after, Date before) {
         Set<Event> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Status.FAILED == getStatusFromLog(s))
                 result.add(getEventFromLog(s));
         }
@@ -332,7 +331,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Set<Event> getErrorEvents(Date after, Date before) {
         Set<Event> result = new HashSet<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Status.ERROR == getStatusFromLog(s))
                 result.add(getEventFromLog(s));
         }
@@ -342,7 +341,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public int getNumberOfAttemptToSolveTask(int task, Date after, Date before) {
         int count = 0;
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Event.SOLVE_TASK == getEventFromLog(s) && task == getTaskFromLog(s)){
                 count++;
             }
@@ -353,7 +352,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public int getNumberOfSuccessfulAttemptToSolveTask(int task, Date after, Date before) {
         int count = 0;
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Event.DONE_TASK == getEventFromLog(s) && task == getTaskFromLog(s)){
                 count++;
             }
@@ -364,7 +363,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Map<Integer, Integer> getAllSolvedTasksAndTheirNumber(Date after, Date before) {
         Map<Integer, Integer> result = new HashMap<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Event.SOLVE_TASK == getEventFromLog(s)){
                 int task = getTaskFromLog(s);
                 result.put(task, getNumberOfAttemptToSolveTask(task, after, before));
@@ -376,7 +375,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     @Override
     public Map<Integer, Integer> getAllDoneTasksAndTheirNumber(Date after, Date before) {
         Map<Integer, Integer> result = new HashMap<>();
-        for (String s : getLogsBetweenDate(after, before)){
+        for (String s : getLogsBetweenDate(after, before, true)){
             if (Event.DONE_TASK == getEventFromLog(s)){
                 int task = getTaskFromLog(s);
                 result.put(task, getNumberOfSuccessfulAttemptToSolveTask(task, after, before));
@@ -409,18 +408,32 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
                 }
                 return resultStatus;
         }
-        String value = query.split("=")[1].replaceAll("\"", "").trim();
+
         String field1 = query.split("\\s")[1].trim();
         String field2 = query.split("\\s")[3].trim();
+        String value = query.split("=")[1].trim();
+        Date after = null;
+        Date before = null;
+        if (value.contains("and date between")){
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+                after = sdf.parse(value.split(" \"|\" ")[2].trim());
+                before = sdf.parse(value.split(" \"|\" ")[4].trim());
+                value = value.split(" \"|\" ")[0].replaceAll("\"", "").trim();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        } else value = value.replaceAll("\"", "").trim();
+
         switch (field2.toLowerCase()){
             case "ip":
-                for (String s : getLogsFromPath()){
+                for (String s : getLogsBetweenDate(after, before, false)){
                     if (getIpFromLog(s).trim().equals(value))
                         result.add(getField(s, field1));
                 }
                 return result;
             case "user" :
-                for (String s : getLogsFromPath()){
+                for (String s : getLogsBetweenDate(after, before, false)){
                     if (getUserNameFromLog(s).trim().equals(value))
                         result.add(getField(s, field1));
                 }
@@ -428,7 +441,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
             case "date" :
                 try {
                     Date date = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse(value);
-                    for (String s : getLogsFromPath()){
+                    for (String s : getLogsBetweenDate(after, before, false)){
                         if (getDateFromLog(s).equals(date))
                             result.add(getField(s, field1));
                     }
@@ -437,13 +450,13 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
                     e.printStackTrace();
                 }
             case "event" :
-                for (String s : getLogsFromPath()){
+                for (String s : getLogsBetweenDate(after, before, false)){
                     if (getEventFromLog(s) == Event.valueOf(value))
                         result.add(getField(s, field1));
                 }
                 return result;
             case "status" :
-                for (String s : getLogsFromPath()){
+                for (String s : getLogsBetweenDate(after, before, false)){
                     if (getStatusFromLog(s) == Status.valueOf(value))
                         result.add(getField(s, field1));
                 }
@@ -525,12 +538,16 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         return result;
     }
 
-    private List<String> getLogsBetweenDate(Date after, Date before){
+    private List<String> getLogsBetweenDate(Date after, Date before, boolean include){
         List<String> list = getLogsFromPath();
         List<String> result = new ArrayList<>();
         for (String s : list){
             Date date = getDateFromLog(s);
-            if ((after == null || date.getTime() >= after.getTime()) && (before == null || date.getTime() <= before.getTime())){
+            if (include){
+                if ((after == null || date.getTime() >= after.getTime()) && (before == null || date.getTime() <= before.getTime())){
+                    result.add(s);
+                }
+            } else if ((after == null || date.getTime() > after.getTime()) && (before == null || date.getTime() < before.getTime())){
                 result.add(s);
             }
         }
