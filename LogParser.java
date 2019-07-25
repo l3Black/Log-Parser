@@ -1,9 +1,6 @@
 package com.javarush.task.task39.task3913;
 
-import com.javarush.task.task39.task3913.query.DateQuery;
-import com.javarush.task.task39.task3913.query.EventQuery;
-import com.javarush.task.task39.task3913.query.IPQuery;
-import com.javarush.task.task39.task3913.query.UserQuery;
+import com.javarush.task.task39.task3913.query.*;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -14,7 +11,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery {
+public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQuery {
     private Path logDir;
 
     public LogParser(Path logDir) {
@@ -387,6 +384,32 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery {
         return result;
     }
 
+    //Methods for QLQuery
+    @Override
+    public Set<Object> execute(String query) {
+        switch (query.toLowerCase()){
+            case "get ip":
+                return new HashSet<>(getUniqueIPs(null, null));
+            case "get user":
+                return new HashSet<>(getAllUsers());
+            case "get date":
+                Set<Object> resultDate = new HashSet<>();
+                for (String s : getLogsFromPath()){
+                    resultDate.add(getDateFromLog(s));
+                }
+                return resultDate;
+            case "get event":
+                return new HashSet<>(getAllEvents(null, null));
+            case "get status":
+                Set<Object> resultStatus = new HashSet<>();
+                for (String s : getLogsFromPath()){
+                    resultStatus.add(getStatusFromLog(s));
+                }
+                return resultStatus;
+        }
+        return new HashSet<>();
+    }
+
     //Methods for help
     private String getIpFromLog(String log){
         String[] strings = log.split("\\s", 2);
@@ -461,6 +484,5 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery {
         m.find();
         return Integer.parseInt(m.group().split("\\s")[1]);
     }
-
 
 }
